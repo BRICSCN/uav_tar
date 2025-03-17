@@ -1,0 +1,125 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <model name="iris">
+    <include>
+      <uri>model://iris</uri>
+    </include>
+
+    <link name="base_link">
+      <pose>0 0 0 0 0 0</pose>
+      <inertial>
+        <mass>1.5</mass>
+        <inertia>
+          <ixx>0.029125</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.029125</iyy>
+          <iyz>0</iyz>
+          <izz>0.055225</izz>
+        </inertia>
+      </inertial>
+
+      <collision name="base_collision">
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.47 0.47 0.11</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="base_visual">
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://iris/meshes/iris.stl</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <name>Gazebo/DarkGrey</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+
+    <!-- 添加相机插件 -->
+    <link name="camera_link">
+      <pose>0.1 0 0.0 0 0.785 0</pose>  <!-- 45度朝下 -->
+      <inertial>
+        <mass>0.1</mass>
+        <inertia>
+          <ixx>0.001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.001</iyy>
+          <iyz>0</iyz>
+          <izz>0.001</izz>
+        </inertia>
+      </inertial>
+      <visual name="visual">
+        <geometry>
+          <box>
+            <size>0.02 0.02 0.02</size>
+          </box>
+        </geometry>
+      </visual>
+      <sensor name="camera" type="camera">
+        <camera>
+          <horizontal_fov>1.047</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>480</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>0.1</near>
+            <far>100</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.007</stddev>
+          </noise>
+        </camera>
+        <always_on>1</always_on>
+        <update_rate>30.0</update_rate>
+        <visualize>true</visualize>
+        <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+          <alwaysOn>true</alwaysOn>
+          <updateRate>0.0</updateRate>
+          <cameraName>iris</cameraName>
+          <imageTopicName>camera/image_raw</imageTopicName>
+          <cameraInfoTopicName>camera/camera_info</cameraInfoTopicName>
+          <frameName>camera_link</frameName>
+          <hackBaseline>0.07</hackBaseline>
+          <distortionK1>0.0</distortionK1>
+          <distortionK2>0.0</distortionK2>
+          <distortionK3>0.0</distortionK3>
+          <distortionT1>0.0</distortionT1>
+          <distortionT2>0.0</distortionT2>
+        </plugin>
+      </sensor>
+    </link>
+
+    <joint name="camera_joint" type="fixed">
+      <parent>iris::base_link</parent>
+      <child>camera_link</child>
+    </joint>
+
+    <!-- 添加其他必要的插件 -->
+    <plugin name="rotor_0_blade_1" filename="libLiftDragPlugin.so">
+      <!-- rotor配置 -->
+    </plugin>
+    <!-- 其他rotor插件 -->
+
+    <plugin name="mavlink_interface" filename="libgazebo_mavlink_interface.so">
+      <robotNamespace></robotNamespace>
+      <imuSubTopic>/imu</imuSubTopic>
+      <gpsSubTopic>/gps</gpsSubTopic>
+      <mavlink_addr>INADDR_ANY</mavlink_addr>
+      <mavlink_udp_port>14560</mavlink_udp_port>
+    </plugin>
+
+  </model>
+</sdf> 

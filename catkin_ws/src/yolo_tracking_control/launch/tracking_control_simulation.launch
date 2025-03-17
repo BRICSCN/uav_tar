@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- MAVROS posix SITL environment launch script -->
+    <!-- launches MAVROS, PX4 SITL, Gazebo environment, and spawns vehicle -->
+    <!-- vehicle pose -->
+    <arg name="x" default="0"/>
+    <arg name="y" default="0"/>
+    <arg name="z" default="0"/>
+    <arg name="R" default="0"/>
+    <arg name="P" default="0"/>
+    <arg name="Y" default="0"/>
+    
+    <!-- vehicle model and world -->
+    <arg name="est" default="ekf2"/>
+    <arg name="vehicle" default="iris_fpv_cam"/>
+    <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty.world"/>
+    
+    <!-- gazebo configs -->
+    <arg name="show_gui" default="true"/>
+    <arg name="debug" default="false"/>
+    <arg name="verbose" default="false"/>
+    <arg name="paused" default="false"/>
+    <arg name="respawn_gazebo" default="false"/>
+    <param name="use_sim_time" value="true"/>
+    
+    <!-- MAVROS configs -->
+    <arg name="fcu_url" default="udp://:14540@localhost:14557"/>
+    <arg name="respawn_mavros" default="false"/>
+    <!-- PX4 configs -->
+    <arg name="interactive" default="true"/>
+
+    <!-- Set Gazebo model path -->
+    <env name="GAZEBO_MODEL_PATH" value="$(find mavlink_sitl_gazebo)/models:$(find yolo_tracking_control)/models:$(optenv GAZEBO_MODEL_PATH):$(env HOME)/PX4_Firmware/Tools/sitl_gazebo/models"/>
+    <env name="GAZEBO_RESOURCE_PATH" value="$(find mavlink_sitl_gazebo)/models:$(find yolo_tracking_control)/models:$(optenv GAZEBO_RESOURCE_PATH):$(env HOME)/PX4_Firmware/Tools/sitl_gazebo/models"/>
+    <env name="PX4_SIM_MODEL" value="iris_fpv_cam"/>
+    
+    <!-- PX4 SITL and Gazebo -->
+    <include file="$(find px4)/launch/posix_sitl.launch">
+        <arg name="x" value="$(arg x)"/>
+        <arg name="y" value="$(arg y)"/>
+        <arg name="z" value="$(arg z)"/>
+        <arg name="R" value="$(arg R)"/>
+        <arg name="P" value="$(arg P)"/>
+        <arg name="Y" value="$(arg Y)"/>
+        <arg name="world" value="$(arg world)"/>
+        <arg name="vehicle" value="$(arg vehicle)"/>
+        <arg name="gui" value="$(arg show_gui)"/>
+        <arg name="interactive" value="$(arg interactive)"/>
+        <arg name="debug" value="$(arg debug)"/>
+        <arg name="verbose" value="$(arg verbose)"/>
+        <arg name="paused" value="$(arg paused)"/>
+        <arg name="respawn_gazebo" value="$(arg respawn_gazebo)"/>
+    </include>
+
+    <!-- MAVROS -->
+    <include file="$(find mavros)/launch/px4.launch">
+        <arg name="gcs_url" value=""/>
+        <arg name="fcu_url" value="$(arg fcu_url)"/>
+        <arg name="respawn_mavros" value="$(arg respawn_mavros)"/>
+    </include>
+
+    <!-- 等待Gazebo启动 -->
+    <arg name="wait_for_startup" default="10"/>
+
+    <!-- 启动USB摄像头驱动 -->
+    <include file="$(find usb_cam)/launch/usb_cam.launch">
+        <arg name="video_device" value="/dev/video0"/>
+        <arg name="image_width" value="640"/>
+        <arg name="image_height" value="480"/>
+    </include>
+
+    <!-- YOLOv5参数设置 -->
+    <param name="yolov5_path" value="$(find yolov5_ros)/yolov5"/>
+    
+    <!-- 启动YOLOv5检测节点 -->
+    <include file="$(find yolov5_ros)/launch/yolo_v5.launch">
+        <arg name="image_topic" value="/iris_fpv_cam/usb_cam/image_raw"/>
+        <arg name="pub_topic" value="/yolov5/BoundingBoxes"/>
+        <arg name="camera_frame" value="camera_link"/>
+        <arg name="use_cpu" value="true"/>
+        <arg name="conf" value="0.5"/>
+        <arg name="show_image" value="false"/>
+    </include>
+
+    <!-- 只保留这一个显示窗口 -->
+    <node name="yolo_detection_view" pkg="image_view" type="image_view" output="screen">
+        <remap from="image" to="/yolov5/detection_image"/>
+        <param name="autosize" value="true"/>
+        <param name="window_name" value="YOLOv5 Detection"/>
+    </node>
+
+    <!-- 启动追踪控制节点 -->
+    <node pkg="yolo_tracking_control" type="tracking_control_node" name="tracking_control_node" output="screen">
+        <param name="target_distance" value="1.0"/>
+        <remap from="/camera/color/image_raw" to="/iris_fpv_cam/usb_cam/image_raw"/>
+    </node>
+
+    <!-- 如果不需要RViz显示，也可以注释掉 -->
+    <!--
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find yolo_tracking_control)/rviz/tracking.rviz"/>
+    -->
+
+</launch>

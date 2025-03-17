@@ -1,0 +1,106 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="iris">
+  
+  <!-- 机器人基础参数 -->
+  <xacro:property name="mass" value="1.5"/>
+  <xacro:property name="width" value="0.47"/>
+  <xacro:property name="length" value="0.47"/>
+  <xacro:property name="height" value="0.11"/>
+  
+  <!-- 无人机主体 -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="${width} ${length} ${height}"/>
+      </geometry>
+      <material name="blue">
+        <color rgba="0 0 1 0.8"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="${width} ${length} ${height}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="${mass}"/>
+      <inertia 
+        ixx="${mass * (width * width + height * height) / 12.0}"
+        ixy="0" ixz="0"
+        iyy="${mass * (length * length + height * height) / 12.0}"
+        iyz="0"
+        izz="${mass * (width * width + length * length) / 12.0}"/>
+    </inertial>
+  </link>
+
+  <!-- 相机链接 -->
+  <link name="camera_link">
+    <visual>
+      <geometry>
+        <box size="0.02 0.02 0.02"/>
+      </geometry>
+      <material name="red">
+        <color rgba="1 0 0 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.02 0.02 0.02"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.1"/>
+      <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+    </inertial>
+  </link>
+
+  <!-- 相机关节 -->
+  <joint name="camera_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="camera_link"/>
+    <origin xyz="0.1 0 0" rpy="0 0.785 0"/>  <!-- 45度朝下 -->
+  </joint>
+
+  <!-- Gazebo相机插件 -->
+  <gazebo reference="camera_link">
+    <sensor type="camera" name="camera">
+      <update_rate>30.0</update_rate>
+      <camera name="head">
+        <horizontal_fov>1.047</horizontal_fov>
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.1</near>
+          <far>100</far>
+        </clip>
+      </camera>
+      <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+        <alwaysOn>true</alwaysOn>
+        <updateRate>0.0</updateRate>
+        <cameraName>iris</cameraName>
+        <imageTopicName>camera/image_raw</imageTopicName>
+        <cameraInfoTopicName>camera/camera_info</cameraInfoTopicName>
+        <frameName>camera_link</frameName>
+        <hackBaseline>0.07</hackBaseline>
+        <distortionK1>0.0</distortionK1>
+        <distortionK2>0.0</distortionK2>
+        <distortionK3>0.0</distortionK3>
+        <distortionT1>0.0</distortionT1>
+        <distortionT2>0.0</distortionT2>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- Gazebo颜色材质 -->
+  <gazebo reference="base_link">
+    <material>Gazebo/Blue</material>
+  </gazebo>
+
+  <gazebo reference="camera_link">
+    <material>Gazebo/Red</material>
+  </gazebo>
+
+</robot> 

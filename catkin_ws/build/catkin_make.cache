@@ -1,0 +1,2 @@
+Yolov5_ros-master/yolov5_ros/yolov5_ros:Yolov5_ros-master/yolov5_ros/yolov5_ros_msgs:usb_cam-develop:yolo_tracking_control
+-DCATKIN_DEVEL_PREFIX=/home/xx/xx/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/xx/xx/catkin_ws/install -G Unix Makefiles

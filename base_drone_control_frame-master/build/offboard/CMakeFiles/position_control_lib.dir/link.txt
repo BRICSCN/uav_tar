@@ -1,0 +1,1 @@
+/usr/bin/c++ -fPIC   -shared -Wl,-soname,libposition_control_lib.so -o /home/xx/base_drone_control_frame-master/devel/lib/libposition_control_lib.so CMakeFiles/position_control_lib.dir/src/position_control_lib.cpp.o 

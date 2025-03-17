@@ -1,0 +1,14 @@
+<launch>
+    <!-- 启动YOLOv5检测节点 -->
+    <include file="$(find yolov5_ros)/launch/yolo_v5.launch" />
+    
+    <!-- 启动追踪控制节点 -->
+    <node pkg="yolo_tracking_control" type="tracking_control_node" name="tracking_control_node" output="screen">
+        <param name="target_distance" value="1.0" />  <!-- 期望与目标保持的距离(米) -->
+    </node>
+    
+    <!-- 启动MAVROS -->
+    <include file="$(find mavros)/launch/px4.launch">
+        <arg name="fcu_url" value="/dev/ttyACM0:57600" />
+    </include>
+</launch> 
